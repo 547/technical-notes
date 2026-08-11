@@ -319,7 +319,7 @@ curl -sI https://jenkins.54715471.xyz | head -1
 
 ## 十、快速结论
 
-这套配置已实现：固定域名 + 多端口分流 + Mac 重启/进程崩溃自动恢复。已固化 `protocol: http2` 绕开 QUIC 被掐问题（见第十二节）。codebuddy 也已加入开机自启 (`com.codebuddy.server`, 端口 50000, KeepAlive 生效)，其页面内 WebSocket 连接失败问题已通过 Cloudflare SSL 加密模式改 `Full` 解决（见第八节）。所有已知问题均已闭环，Jenkins 完全正常。
+这套配置已实现：固定域名 + 多端口分流 + Mac 重启/进程崩溃自动恢复。隧道已恢复默认 `quic` 协商（**未**固化 `protocol: http2`——http2 会破坏 codebuddy 的 WebSocket 输入框，见第十二节，仅在 QUIC 被掐时临时应急）。codebuddy 也已加入开机自启 (`com.codebuddy.server`, 端口 50000, KeepAlive 生效)，其页面无输入框问题已通过去掉 `protocol: http2` + 手机清缓存解决（见第十二节）。所有已知问题均已闭环，Jenkins 完全正常。
 
 ---
 
