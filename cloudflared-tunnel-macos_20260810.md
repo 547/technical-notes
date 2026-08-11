@@ -267,6 +267,14 @@ launchctl load   ~/Library/LaunchAgents/com.cloudflare.cloudflared.plist
 ```
 恢复标志：日志出现 `SUMMARY: Environment is healthy. cloudflared will use 'http2' as primary protocol.`，公网回到 `HTTP/2 403`（服务活着）。
 
+> ⚠️ **重要副作用（2026-08-11 实测）**：`protocol: http2` 会让 **codebuddy 的 Web UI 没输入框**！
+> - codebuddy Web UI 的 composer（输入框）由前端 `WebSocket`（路径 `/ws?token=...`）驱动。
+> - 本地 `http://127.0.0.1:50000` 直连一直正常（走 HTTP，不经隧道）。
+> - 但经 cloudflared 隧道时，若隧道传输用 **http2**，手机端 WS 握手/连接异常 → 输入框不渲染（历史会话能看、无输入框）。
+> - **验证**：去掉 `protocol: http2`（回到默认 quic 协商）+ 手机清缓存重进 → 输入框恢复。
+> - 所以 `protocol: http2` 只作为 QUIC 被掐时的**临时应急**，稳定后务必去掉；且一旦用了 http2，手机端需**清浏览器缓存**才能恢复 WS。
+> - 当前 config.yml 已将 `protocol: http2` 移除（回到默认 quic），codebuddy 端口恢复 `59395`。
+
 ### 12.4 临时手动重启（网络抖动卡死时）
 若隧道卡在重试循环、launchd 不拉起，手动强制重启：
 ```bash
@@ -289,6 +297,23 @@ curl -sI https://jenkins.54715471.xyz | head -1
 ### 12.6 后续隐患
 - 若某天 http2 也偶发离线，可能是更上层网络抽风。可考虑加连通性监测脚本配合 launchd 自动重启（暂未做，按需再加）。
 - eu.org 申请的 `wangqi5471.eu.org` 审核通过、且确认出口稳定后，可照第十一节扩展更多子域。
+
+### 12.7 codebuddy Web UI 无输入框排查记录（⭐ 已闭环）
+**现象**：手机经隧道开 `codebuddy.54715471.xyz` 能看历史、但无输入框（历史页/新对话页都没有）；Mac 本机 `127.0.0.1:50000` 却有输入框。
+
+**排除项（踩坑，别再走）**：
+- ❌ 不是 launchd 不传 QClaw `QCLAW_*` 环境变量（实测 env 全在、`/api/v1/auth/status` 返回 `authenticated:true`）。
+- ❌ 不是缺 `?password=`（带密码也照样无输入框；且没密码根本进不去）。
+- ❌ 不是端口（59395 / 50000 经隧道都没框；本地都有）。
+- ❌ 不是历史页 vs 新对话页 UI 差异。
+
+**真因（2026-08-11 实测闭环）**：隧道 `protocol: http2` 破坏了 codebuddy 前端 `/ws` WebSocket。去掉 `protocol: http2`（恢复默认 quic 协商）+ 手机**清空浏览器缓存**重进 → 输入框恢复。
+
+**定位关键事实**：同一服务，本地直连有框、隧道无框 → 差异只在网络路径（隧道）；昨天隧道有框、今天无框 → 期间只改过 `protocol: http2`。二分法直接锁定。
+
+**修法**：`config.yml` 删掉 `protocol: http2` 那一行，重载隧道。手机端务必清缓存。
+
+**一句话**：codebuddy 经 cloudflared 隧道时，`protocol` 别设 http2，否则 WS 起不来、Web UI 没输入框；要设也只能临时应急，且手机需清缓存。
 
 ---
 
