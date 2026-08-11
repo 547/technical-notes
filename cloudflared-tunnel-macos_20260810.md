@@ -34,7 +34,7 @@ Cloudflare 边缘（DNS: codebuddy/jenkins.54715471.xyz → 隧道）
    ▼
 本机 cloudflared (launchd 托管, 读 config.yml)
    │  按 hostname 分流 (ingress)
-   ├─► http://localhost:59395   (codebuddy)
+   ├─► http://localhost:50000   (codebuddy)
    └─► http://localhost:8080    (jenkins, brew jenkins-lts)
 ```
 
@@ -273,7 +273,7 @@ launchctl load   ~/Library/LaunchAgents/com.cloudflare.cloudflared.plist
 > - 但经 cloudflared 隧道时，若隧道传输用 **http2**，手机端 WS 握手/连接异常 → 输入框不渲染（历史会话能看、无输入框）。
 > - **验证**：去掉 `protocol: http2`（回到默认 quic 协商）+ 手机清缓存重进 → 输入框恢复。
 > - 所以 `protocol: http2` 只作为 QUIC 被掐时的**临时应急**，稳定后务必去掉；且一旦用了 http2，手机端需**清浏览器缓存**才能恢复 WS。
-> - 当前 config.yml 已将 `protocol: http2` 移除（回到默认 quic），codebuddy 端口恢复 `59395`。
+> - 当前 config.yml 已将 `protocol: http2` 移除（回到默认 quic），codebuddy 端口为 `50000`。
 
 ### 12.4 临时手动重启（网络抖动卡死时）
 若隧道卡在重试循环、launchd 不拉起，手动强制重启：
@@ -304,7 +304,7 @@ curl -sI https://jenkins.54715471.xyz | head -1
 **排除项（踩坑，别再走）**：
 - ❌ 不是 launchd 不传 QClaw `QCLAW_*` 环境变量（实测 env 全在、`/api/v1/auth/status` 返回 `authenticated:true`）。
 - ❌ 不是缺 `?password=`（带密码也照样无输入框；且没密码根本进不去）。
-- ❌ 不是端口（59395 / 50000 经隧道都没框；本地都有）。
+- ❌ 不是端口（59395 / 50000 经隧道都没框；本地都有；最终定用 50000）。
 - ❌ 不是历史页 vs 新对话页 UI 差异。
 
 **真因（2026-08-11 实测闭环）**：隧道 `protocol: http2` 破坏了 codebuddy 前端 `/ws` WebSocket。去掉 `protocol: http2`（恢复默认 quic 协商）+ 手机**清空浏览器缓存**重进 → 输入框恢复。
