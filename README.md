@@ -11,8 +11,8 @@
 | [cloudflared-tunnel-macos_20260810.md](cloudflared-tunnel-macos_20260810.md) | Mac + cloudflared 多端口隧道 + launchd 常驻（含 QUIC 被掐改 http2、codebuddy 端口/WebSocket 坑、eu.org 免费域名申请） | 2026-08-10 | ✅ 已闭环 |
 | [flutter_json_parse_perf_20260810.md](flutter_json_parse_perf_20260810.md) | Flutter JSON 解析性能优化 | 2026-08-10 | — |
 | [rms-log-decrypt-v2.4.0-learn_2026-07-24.md](rms-log-decrypt-v2.4.0-learn_2026-07-24.md) | RMS 日志解密 v2.4.0 学习笔记 | 2026-07-24 | — |
-| [task-summary_2026-05-02-1103.md](task-summary_2026-05-02-1103.md) | 任务总结 | 2026-05-02 | — |
-| [task-summary_20260608_1731.md](task-summary_20260608_1731.md) | 任务总结 | 2026-06-08 | — |
+
+> 注：任务产物摘要（`task-summary_*.md`）不属技术学习文档，留在 OpenClaw workspace，不归入本目录。
 
 ## 目录约定
 
