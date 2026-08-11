@@ -325,8 +325,10 @@ curl -sI https://jenkins.54715471.xyz | head -1
 
 ## 十一、免费域名申请（eu.org）—— 2026-08-10~11 实战记录
 
-> 目的：给隧道加一个永久免费、可改 NS 到 Cloudflare 的备用固定域名。
-> 结论：已申请 `wangqi5471.eu.org`，工单号 `20260811024453-arf-36049`，待审核。
+> 目的：给隧道加永久免费、可改 NS 到 Cloudflare 的固定域名（可不限量申请，一个账号多个域名）。
+> 结论：已申请两个 eu.org 域名，均待审核：
+> - `wangqi5471.eu.org` —— 工单 `20260811024453-arf-36049`
+> - `wq5471.eu.org` —— 工单 `20260811075537-arf-57056`（NS 预校验已过，已入库）
 
 ### 11.1 哪些「免费域名」能接 Cloudflare 隧道
 
@@ -355,12 +357,13 @@ curl -sI https://jenkins.54715471.xyz | head -1
 **Step 2：申请域名（Request a domain / New domain）**
 - **Complete domain name** 字段填**完整域名**（前缀+后缀），如 `wangqi5471.eu.org`
 - 系统先查重：返回 `Domain not found` = 「没人占用 = 可用」✅（不是报错）；返回已存在才是真被占
-- `momo` / `wangqi` 这类短词已被占，需用组合（`wangqi5471`、`momo-home` 等）
+- `momo` / `wangqi` 这类短词已被占，需用组合（`wangqi5471`、`wq5471`、`momo-home` 等）
+- **一个账号可不限量申请多个 eu.org 域名**（官方无硬性上限，志愿者公益项目）。当前实例：同一账号已挂 `wangqi5471.eu.org` 与 `wq5471.eu.org` 两个，互不影响
 
 **Step 3：填 Nameservers（关键）**
 - 表单要 Cloudflare 的两条 NS，**IP 栏留空**（Cloudflare 的 NS 在 `cloudflare.com` 下，是外部域名，不需要 glue 记录）
-- 提交前必须先在 Cloudflare 后台 **Add a Site 添加 `wangqi5471.eu.org`**，拿到那两条 NS
-- 本例填的是 `isaac.ns.cloudflare.com` / `lindsey.ns.cloudflare.com`（注意：与 `54715471.xyz` 复用同一对 NS 主机名是正常现象，前提是新 zone 已建）
+- 提交前必须先在 Cloudflare 后台 **Add a Site 添加 `wangqi5471.eu.org`**（以及第二个域名 `wq5471.eu.org`），分别拿到那两条 NS
+- 本例填的是 `isaac.ns.cloudflare.com` / `lindsey.ns.cloudflare.com`（注意：与 `54715471.xyz` 复用同一对 NS 主机名是正常现象，前提是新 zone 已建；多个 eu.org 域名各自是独立 zone，但可用同一对 NS 主机名）
 
 **Step 4：提交与检查**
 - 点 Submit 后系统自动跑 NS/SOA 检查：连 Cloudflare 两条 NS，SOA、NS 记录均 `ok`，无报错
@@ -370,25 +373,40 @@ curl -sI https://jenkins.54715471.xyz | head -1
   Saved as request 20260811024453-arf-36049
   Done
   ```
-- **工单号 `20260811024453-arf-36049` 记好备查**
+- **工单号 `20260811024453-arf-36049`（`wangqi5471.eu.org`）记好备查**
+- 第二个域名 `wq5471.eu.org` 的提交输出：
+  ```
+  Checking SOA records for WQ5471.EU.ORG
+  SOA from ISAAC.NS.CLOUDFLARE.COM ... serial 2411913422 ... ok
+  Checking NS records for WQ5471.EU.ORG
+  NS from ... ok
+  No error, storing for validation...
+  Saved as request 20260811075537-arf-57056
+  Done
+  ```
+  （Cloudflare 侧已建好 `wq5471.eu.org` zone，否则 NS 不会返回 SOA → 这是 zone 已建好的信号）
 
 **Step 5：等审核**
 - eu.org 是志愿者运营，审核 **几天到两三周**，留意注册邮箱
-- 审核期间**不要改 NS、不要删 Cloudflare 里的 `wangqi5471.eu.org` 站点**（保持 SOA/NS 可查，否则审核失败）
+- 审核期间**不要改 NS、不要删 Cloudflare 里的 `wangqi5471.eu.org` / `wq5471.eu.org` 站点**（保持 SOA/NS 可查，否则审核失败）
 
 ### 11.4 审核通过后的落地步骤（备着）
 
-1. 邮箱收到批准通知，回 Cloudflare 确认 `wangqi5471.eu.org` 状态变 `Active`
-2. 绑定子域到隧道：
+1. 邮箱收到批准通知，回 Cloudflare 确认 `wangqi5471.eu.org` / `wq5471.eu.org` 状态变 `Active`
+2. 绑定子域到隧道（两个域名各自配）：
    ```bash
+   # wangqi5471.eu.org
    cloudflared tunnel route dns my-tunnel codebuddy.wangqi5471.eu.org
    cloudflared tunnel route dns my-tunnel jenkins.wangqi5471.eu.org
+   # wq5471.eu.org
+   cloudflared tunnel route dns my-tunnel codebuddy.wq5471.eu.org
+   cloudflared tunnel route dns my-tunnel jenkins.wq5471.eu.org
    ```
-3. 在 `~/.cloudflared/config.yml` 的 `ingress` 加两条：
+3. 在 `~/.cloudflared/config.yml` 的 `ingress` 加对应条目（以 wq5471 为例）：
    ```yaml
-   - hostname: codebuddy.wangqi5471.eu.org
+   - hostname: codebuddy.wq5471.eu.org
      service: http://localhost:50000
-   - hostname: jenkins.wangqi5471.eu.org
+   - hostname: jenkins.wq5471.eu.org
      service: http://localhost:8080
    ```
 4. 改完重载 launchd：
